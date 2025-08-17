@@ -1,0 +1,53 @@
+h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  text-align: center;
+  margin-top: 2rem;
+  margin-bottom: 1.5rem;
+  color: #1a1a1a; /* Dark gray for strong contrast */
+  letter-spacing: 2px;
+  font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+}
+
+.post-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 2rem;
+ 
+}
+
+.post-card {
+  display: flex;
+  flex-direction: row;
+  gap: 1.5rem;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 1rem;
+}
+
+.post-image {
+  width: 150px;
+  height: auto;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.post-content {
+  flex: 1;
+}
+
+.post-content h2 a {
+  color: #333;
+  text-decoration: none;
+  font-size: 1.5rem;
+}
+
+.post-date {
+  font-size: 0.9rem;
+  color: #777;
+}
+
+.post-preview {
+  margin-top: 0.5rem;
+  line-height: 1.6;
+}

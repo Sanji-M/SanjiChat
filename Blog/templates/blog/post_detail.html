@@ -1,0 +1,24 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+  <div class="post-detail">
+    <h2>{{ post.title }}</h2>
+    
+    <p class="meta">
+      <strong>Category:</strong> {{ post.category.name }} |
+      <small>Published: {{ post.created_at|date:"F j, Y" }}</small>
+    </p>
+
+    {% if post.excerpt %}
+      <p class="excerpt"><em>{{ post.excerpt }}</em></p>
+    {% endif %}
+
+    <div class="content">
+      {{ post.content|linebreaks }}
+    </div>
+
+    <a href="{% url 'blog-home' %}" class="back-link">← Back to Home yani nyumbani</a>
+  </div>
+{% endblock %}
