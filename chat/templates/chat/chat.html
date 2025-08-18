@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Chat</title>
+    {% load static %}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            font-size: 1.05rem;
+        }
+
+        @keyframes fadeSlide {
+            0% {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        header {
+            background: linear-gradient(to right, #363f4e, #1976d2);
+            color: white;
+            padding: 24px;
+            text-align: center;
+            font-size: 1.9rem;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-bottom: 1px solid #ccc;
+            animation: fadeSlide 0.8s ease-out;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            font-weight: 400;
+            margin-top: 6px;
+            color: #e3e3e3;
+            animation: fadeSlide 1s ease-out;
+        }
+
+        .chat-box {
+            max-width: 680px;
+            margin: 30px auto;
+            background: white;
+            padding: 28px;
+            border-radius: 12px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+            overflow-y: auto;
+            max-height: 80vh;
+        }
+
+        .message {
+            margin-bottom: 16px;
+            line-height: 1.6;
+            background: #f5f6f7;
+            padding: 10px 14px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+       .username {
+           font-weight: 600;
+           margin-right: 6px;
+           color: #333;
+           font-size: 1.2rem; /* Increased from default */
+        }
+        #username-setup {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+             margin-bottom: 20px;
+        }
+
+        #username-input {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            width: 220px;
+            font-size: 1.05rem;
+            background: #fff;
+        }
+
+        #set-name-btn {
+            padding: 10px 18px;
+            background: #1877f2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        textarea {
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            resize: vertical;
+            min-height: 70px;
+            font-size: 1.05rem;
+            background: #fff;
+        }
+
+        button[type="submit"] {
+            padding: 12px;
+            background: #42a5f5;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 1.05rem;
+        }
+
+        button[type="submit"]:hover {
+            background: #566374;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        💬 Sanja's Chat Room
+        <div class="subtitle">Eeh! ni kubanja tu</div>
+    </header>
+
+    <audio id="popSound" src="{% static 'chat/sanpop.wav' %}" preload="auto"></audio>
+
+    <div class="chat-box" id="chat-box">
+        <div id="username-setup">
+            <input type="text" id="username-input" placeholder="Enter your name" />
+            <button id="set-name-btn" onclick="saveUsername()">Set Name</button>
+        </div>
+
+        {% for msg in messages reversed %}
+            <div class="message">
+                <span class="username">{{ msg.username }}</span>{{ msg.content }}
+            </div>
+        {% endfor %}
+
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="username" id="username-hidden">
+            <textarea name="content" placeholder="Type a message..." required></textarea>
+            <button type="submit">Send</button>
+        </form>
+    </div>
+
+    <script>
+        function saveUsername() {
+            const name = document.getElementById("username-input").value;
+            if (name) {
+                localStorage.setItem("chatUsername", name);
+                document.getElementById("username-setup").style.display = "none";
+                document.getElementById("username-hidden").value = name;
+            }
+        }
+
+        window.onload = function() {
+            const savedName = localStorage.getItem("chatUsername");
+            if (savedName) {
+                document.getElementById("username-setup").style.display = "none";
+                document.getElementById("username-hidden").value = savedName;
+            }
+
+            const chatBox = document.getElementById("chat-box");
+            if (sessionStorage.getItem("scrollToBottom") === "true") {
+                chatBox.scrollTop = chatBox.scrollHeight;
+                sessionStorage.removeItem("scrollToBottom");
+            }
+        };
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const form = document.querySelector("form");
+            const sound = document.getElementById("popSound");
+
+            form.addEventListener("submit", function() {
+                sound.play();
+                sessionStorage.setItem("scrollToBottom", "true");
+            });
+        });
+    </script>
+</body>
+</html>
