@@ -3,6 +3,6 @@ services:
     name: simple-chat
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn chatproject.wsgi
+    startCommand: bash -c "python manage.py migrate && gunicorn chatproject.wsgi:application"
     plan: free
     autoDeploy: true
