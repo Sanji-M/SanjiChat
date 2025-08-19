@@ -2,16 +2,52 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Chat Room</title>
+  <title>Sanji’s Chat Room</title>
   <style>
-    /* Basic styling */
-    #messages { max-height: 60vh; overflow-y: auto; padding: 1rem; }
+    body {
+      font-family: sans-serif;
+      max-width: 600px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    h1 { font-size: 2rem; margin-bottom: 0.25rem; }
+    p.subtitle { color: #555; margin-top: 0; }
+    #messages {
+      border: 1px solid #ddd;
+      padding: 1rem;
+      height: 50vh;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+      background: #f9f9f9;
+    }
     #messages div { margin-bottom: 0.5rem; }
-    #sendForm { margin-top: 1rem; }
+    #sendForm {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    #sendForm input {
+      flex: 1;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    #sendForm button {
+      padding: 0.6rem 1.2rem;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #sendForm button:hover {
+      background: #0056b3;
+    }
   </style>
 </head>
 <body>
-  <h1>Chat Room</h1>
+  <h1>Sanji’s Chat Room</h1>
+  <p class="subtitle">Eeh! ni kubanja tu. 🎉</p>
 
   <div id="messages">
     {% for message in messages %}
@@ -23,45 +59,43 @@
 
   <form id="sendForm" method="post" action="{% url 'chat' %}">
     {% csrf_token %}
-    <input name="username" placeholder="Your name" required />
-    <input name="content" placeholder="Your message" required />
+    <label>
+      Jambo ✏️✏️
+      <input
+        name="content"
+        placeholder="Type a message…"
+        required
+      />
+    </label>
     <button type="submit">Send</button>
   </form>
 
   <script>
-    // Grab container + initial lastId
-    const messagesContainer = document.getElementById('messages');
+    // Real-time polling
+    const container = document.getElementById('messages');
     let lastId = 0;
-    document.querySelectorAll('#messages [data-id]').forEach(el => {
-      const id = Number(el.getAttribute('data-id'));
-      if (id > lastId) lastId = id;
+    container.querySelectorAll('[data-id]').forEach(el => {
+      lastId = Math.max(lastId, Number(el.getAttribute('data-id')));
     });
 
-    // Polling function
-    async function fetchNewMessages() {
-      try {
-        const res = await fetch(`/api/messages/?since=${lastId}`);
-        if (!res.ok) return;
-        const msgs = await res.json();
-        msgs.forEach(m => {
-          const div = document.createElement('div');
-          div.setAttribute('data-id', m.id);
-          div.innerHTML = `<strong>${m.username}</strong>: ${m.content}`;
-          messagesContainer.appendChild(div);
-          lastId = m.id;
-        });
-        // Scroll to bottom
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      } catch (err) {
-        console.error('Error fetching messages:', err);
-      }
+    async function fetchNew() {
+      const res = await fetch(`/api/messages/?since=${lastId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      data.forEach(m => {
+        const div = document.createElement('div');
+        div.setAttribute('data-id', m.id);
+        div.innerHTML = `<strong>${m.username}</strong>: ${m.content}`;
+        container.append(div);
+        lastId = m.id;
+      });
+      container.scrollTop = container.scrollHeight;
     }
 
-    // Kick off and repeat every 2 seconds
-    fetchNewMessages();
-    setInterval(fetchNewMessages, 2000);
+    fetchNew();
+    setInterval(fetchNew, 2000);
 
-    // Play pop sound on submit
+    // Pop sound on send
     const pop = new Audio('/static/chat/pop.mp3');
     document.getElementById('sendForm').addEventListener('submit', () => {
       pop.currentTime = 0;
