@@ -13,7 +13,6 @@
   />
 
   <style>
-    /* Base */
     body {
       font-family: 'Inter', sans-serif;
       background: #f2f5f8;
@@ -25,7 +24,6 @@
       align-items: center;
     }
 
-    /* Heading Block */
     .header-block {
       width: 100%;
       max-width: 600px;
@@ -34,34 +32,38 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       margin: 2rem 0 1rem;
       animation: slideInDown 0.5s ease-out;
-
-  /* only top-left and bottom-right rounded */
       border-top-left-radius: 20px;
       border-bottom-right-radius: 20px;
-
-  /* reset the other two */
       border-top-right-radius: 0;
       border-bottom-left-radius: 0;
     }
+
     .header-block h1 {
       margin: 0;
-      color: #007bff;   /* unchanged */
-      font-weight: 600; /* unchanged */
+      color: #007bff;
+      font-weight: 600;
       text-align: center;
     }
 
-    @keyframes slideInDown {
-      from {
-        transform: translateY(-50px);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
+    .header-block .subtitle {
+      margin: 0.5rem 0 0;
+      font-size: 1rem;
+      color: #007bff;
+      opacity: 0.85;
+      text-align: center;
+      animation: fadeIn 0.5s ease-out 0.5s both;
     }
 
-    /* Name Prompt Overlay */
+    @keyframes slideInDown {
+      from { transform: translateY(-50px); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to   { opacity: 0.85; transform: translateY(0); }
+    }
+
     #name-prompt {
       position: fixed;
       inset: 0;
@@ -71,6 +73,7 @@
       justify-content: center;
       z-index: 1000;
     }
+
     #name-prompt .box {
       background: #fff;
       padding: 2rem;
@@ -80,6 +83,7 @@
       text-align: center;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
+
     #name-prompt input {
       width: 100%;
       padding: 0.75rem;
@@ -88,6 +92,7 @@
       border-radius: 8px;
       font-size: 1rem;
     }
+
     #name-prompt button {
       margin-top: 1rem;
       padding: 0.75rem 1.5rem;
@@ -99,11 +104,11 @@
       cursor: pointer;
       transition: background 0.2s;
     }
+
     #name-prompt button:hover {
       background: #0056b3;
     }
 
-    /* Chat Container */
     #chat-container {
       flex: 1;
       width: 100%;
@@ -117,7 +122,6 @@
       margin-bottom: 2rem;
     }
 
-    /* Messages */
     #messages {
       flex: 1;
       padding: 1.5rem;
@@ -127,6 +131,7 @@
       gap: 0.75rem;
       background: #fafafa;
     }
+
     .message {
       background: #e4e6eb;
       padding: 1rem;
@@ -135,15 +140,16 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       color: #333;
     }
+
     #messages::-webkit-scrollbar {
       width: 6px;
     }
+
     #messages::-webkit-scrollbar-thumb {
       background: #ccc;
       border-radius: 3px;
     }
 
-    /* Send Form */
     #sendForm {
       display: flex;
       gap: 0.5rem;
@@ -151,6 +157,7 @@
       border-top: 1px solid #eee;
       background: #fff;
     }
+
     #sendForm input {
       flex: 1;
       padding: 0.75rem 1rem;
@@ -160,6 +167,7 @@
       background: #fafafa;
       font-size: 1rem;
     }
+
     #sendForm button {
       padding: 0.75rem 1.5rem;
       background: #007bff;
@@ -170,6 +178,7 @@
       cursor: pointer;
       transition: background 0.2s, transform 0.1s;
     }
+
     #sendForm button:hover {
       background: #0056b3;
       transform: translateY(-1px);
@@ -177,12 +186,11 @@
   </style>
 </head>
 <body>
-  <!-- Animated Heading Block -->
   <div class="header-block">
     <h1>Sanja’s Chat Room</h1>
+    <p class="subtitle">Eeh! wadau, ni kubanja tu😊🗣️</p>
   </div>
 
-  <!-- Overlay for First-Time Name -->
   <div id="name-prompt">
     <div class="box">
       <h2>What’s your name?</h2>
@@ -191,7 +199,6 @@
     </div>
   </div>
 
-  <!-- Chat Interface -->
   <div id="chat-container">
     <div id="messages">
       {% for msg in messages %}
@@ -210,7 +217,6 @@
   </div>
 
   <script>
-    // 1) Name-prompt logic
     const promptEl = document.getElementById('name-prompt');
     const nameInput = document.getElementById('name-input');
     const setBtn = document.getElementById('set-name');
@@ -221,6 +227,7 @@
       promptEl.style.display = 'none';
       hiddenInput.value = username;
     }
+
     setBtn.addEventListener('click', () => {
       username = nameInput.value.trim() || 'Anonymous';
       localStorage.setItem('chat_username', username);
@@ -228,12 +235,12 @@
       promptEl.style.display = 'none';
     });
 
-    // 2) Polling for new messages
     const container = document.getElementById('messages');
     let lastId = 0;
     container.querySelectorAll('[data-id]').forEach(el => {
       lastId = Math.max(lastId, Number(el.dataset.id));
     });
+
     async function fetchNew() {
       try {
         const res = await fetch(`/api/messages/?since=${lastId}`);
@@ -252,10 +259,10 @@
         console.error(e);
       }
     }
+
     fetchNew();
     setInterval(fetchNew, 2000);
 
-    // 3) Play pop sound on send
     const pop = new Audio("{% static 'chat/pop.mp3' %}");
     document.getElementById('sendForm')
       .addEventListener('submit', () => {
