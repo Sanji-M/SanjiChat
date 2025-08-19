@@ -3,134 +3,110 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>Chat Room</title>
-  <!-- Make it mobile-friendly out of the box -->
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-
+  <title>Sanja’s Chat Room</title>
   <style>
-    /* Base */
     body {
       font-family: sans-serif;
       background: #f2f5f8;
       margin: 0;
-      padding: 1rem 0;
+      padding: 1rem;
       display: flex;
       flex-direction: column;
-      min-height: 100vh;
       align-items: center;
     }
-
-    /* Header pill */
-    .header {
-      background: #fff;
-      padding: 0.75rem 1.5rem;
-      border-radius: 30px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      margin-bottom: 1rem;
-      display: inline-block;
-    }
-    .header h1 {
-      margin: 0;
+    h1 {
       color: #007bff;
-      font-size: 1.5rem;
+      margin-bottom: 1rem;
     }
-
-    /* Chat container */
-    #chat-container {
-      flex: 1;
+    #messages {
       width: 100%;
       max-width: 600px;
+      min-height: 50vh;
       background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      margin-bottom: 1rem;
-    }
-
-    /* Messages */
-    #messages {
-      flex: 1;
+      border-radius: 8px;
       padding: 1rem;
       overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      background: #fafafa;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
     .message {
-      padding: 1rem;
-      background: #e4e6eb;
-      border-radius: 12px;
-      max-width: 75%;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      color: #333;
-      line-height: 1.4;
+      margin-bottom: 0.75rem;
     }
-
-    /* Form */
     #sendForm {
+      margin-top: 1rem;
+      width: 100%;
+      max-width: 600px;
       display: flex;
       gap: 0.5rem;
-      padding: 1rem;
-      border-top: 1px solid #eee;
-      background: #fff;
     }
     #sendForm input {
       flex: 1;
-      padding: 0.75rem 1rem;
-      border: 1px solid #ddd;
-      border-radius: 30px;
+      padding: 0.75rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
       outline: none;
-      background: #fafafa;
-      font-size: 1rem;
     }
     #sendForm button {
+      padding: 0.75rem 1.5rem;
       background: #007bff;
       color: #fff;
       border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 30px;
+      border-radius: 4px;
       cursor: pointer;
-      font-weight: 600;
-      transition: background 0.2s, transform 0.1s;
     }
     #sendForm button:hover {
       background: #0056b3;
-      transform: translateY(-1px);
     }
   </style>
 </head>
 <body>
+  <h1>Sanja’s Chat Room</h1>
 
-  <!-- Styled Title -->
-  <div class="header">
-    <h1>Chat Room</h1>
+  <div id="messages">
+    {% for msg in messages %}
+      <div class="message" data-id="{{ msg.id }}">
+        <strong>{{ msg.username }}:</strong> {{ msg.content }}
+      </div>
+    {% endfor %}
   </div>
 
-  <!-- Main Chat Box -->
-  <div id="chat-container">
-    <div id="messages">
-      {% for msg in messages %}
-        <div class="message" data-id="{{ msg.id }}">
-          <strong>{{ msg.username }}:</strong> {{ msg.content }}
-        </div>
-      {% endfor %}
-    </div>
-
-    <form id="sendForm" method="post" action="{% url 'chat' %}">
-      {% csrf_token %}
-      <input type="hidden" name="username" id="username-input"/>
-      <input name="content" placeholder="Type a message…" autocomplete="off" required/>
-      <button type="submit">Send</button>
-    </form>
-  </div>
+  <form id="sendForm" method="post" action="{% url 'chat' %}">
+    {% csrf_token %}
+    <input name="username" placeholder="Your name" autocomplete="off" required/>
+    <input name="content" placeholder="Type a message..." autocomplete="off" required/>
+    <button type="submit">Send</button>
+  </form>
 
   <script>
-    // Name-prompt, polling & pop-sound logic remains unchanged
-    const promptEl = document.getElementById('name-prompt');
-    // ...your existing JS here...
+    // Poll for new messages
+    const container = document.getElementById('messages');
+    let lastId = 0;
+    container.querySelectorAll('[data-id]').forEach(el => {
+      lastId = Math.max(lastId, Number(el.dataset.id));
+    });
+
+    async function fetchNew() {
+      const res = await fetch(`/api/messages/?since=${lastId}`);
+      if (!res.ok) return;
+      const msgs = await res.json();
+      msgs.forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'message';
+        div.dataset.id = m.id;
+        div.innerHTML = `<strong>${m.username}:</strong> ${m.content}`;
+        container.appendChild(div);
+        lastId = m.id;
+      });
+      container.scrollTop = container.scrollHeight;
+    }
+    setInterval(fetchNew, 2000);
+
+    // Play pop sound on send
+    const pop = new Audio("{% static 'chat/pop.mp3' %}");
+    document.getElementById('sendForm').addEventListener('submit', () => {
+      pop.currentTime = 0;
+      pop.play();
+    });
   </script>
 </body>
 </html>
