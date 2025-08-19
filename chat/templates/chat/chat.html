@@ -1,80 +1,45 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Sanji's Chat Room</title>
+  <meta charset="UTF-8"/>
+  <title>Chat Room</title>
   <style>
     body {
       font-family: sans-serif;
-      background: #f0f4f8;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-    }
-    .header {
-      background: linear-gradient(to right, #001f3f, #007bff);
-      color: #fff;
-      padding: 1.5rem;
-      text-align: center;
-      flex: 0 0 auto;
-    }
-    .header h1 {
-      margin: 0;
-      font-size: 2.5rem;
-    }
-    .header p {
-      margin: 0.5rem 0 0;
-      font-size: 1.1rem;
-      opacity: 0.9;
-    }
-
-    #chat-container {
-      flex: 1 1 auto;
-      display: flex;
-      flex-direction: column;
       max-width: 600px;
-      margin: 1rem auto;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      overflow: hidden;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 1rem;
     }
     #messages {
-      flex: 1 1 auto;
+      min-height: 50vh;
+      border: 1px solid #ddd;
       padding: 1rem;
+      background: #fafafa;
       overflow-y: auto;
+      margin-bottom: 1rem;
     }
-    .message {
-      margin-bottom: 0.75rem;
-      line-height: 1.4;
-    }
-    .message strong {
-      color: #333;
-    }
-
     #sendForm {
-      flex: 0 0 auto;
       display: flex;
-      border-top: 1px solid #eee;
+      gap: 0.5rem;
     }
     #sendForm input {
       flex: 1;
-      padding: 0.75rem 1rem;
-      border: none;
-      font-size: 1rem;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
       outline: none;
-    }
-    #sendForm input::placeholder {
-      color: #999;
     }
     #sendForm button {
       background: #007bff;
-      color: #fff;
+      color: white;
       border: none;
-      padding: 0 1.5rem;
-      font-size: 1rem;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
       cursor: pointer;
     }
     #sendForm button:hover {
@@ -83,70 +48,53 @@
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>Sanji's Chat Room</h1>
-    <p>Eeh! ni kubanja tu. 🎉</p>
+  <h1>Chat Room</h1>
+
+  <div id="messages">
+    {% for msg in messages %}
+      <div data-id="{{ msg.id }}">
+        <strong>{{ msg.username }}:</strong> {{ msg.content }}
+      </div>
+    {% endfor %}
   </div>
 
-  <div id="chat-container">
-    <div id="messages">
-      {% for msg in messages %}
-        <div class="message" data-id="{{ msg.id }}">
-          <strong>{{ msg.username }}:</strong> {{ msg.content }}
-        </div>
-      {% endfor %}
-    </div>
-
-    <form id="sendForm" method="post" action="{% url 'chat' %}">
-      {% csrf_token %}
-      <input
-        name="content"
-        placeholder="Type a message..."
-        autocomplete="off"
-        required
-      />
-      <button type="submit">Send</button>
-    </form>
-  </div>
+  <form id="sendForm" method="post" action="{% url 'chat' %}">
+    {% csrf_token %}
+    <input name="username" placeholder="Your name" autocomplete="off" required/>
+    <input name="content" placeholder="Your message" autocomplete="off" required/>
+    <button type="submit">Send</button>
+  </form>
 
   <script>
-    // initialize lastId
+    // 1) Figure out last message id
     const container = document.getElementById('messages');
     let lastId = 0;
     container.querySelectorAll('[data-id]').forEach(el => {
       lastId = Math.max(lastId, Number(el.dataset.id));
     });
 
-    // polling for new messages
+    // 2) Poll every 2s for new messages
     async function fetchNew() {
-      try {
-        const res = await fetch(`/api/messages/?since=${lastId}`);
-        if (!res.ok) return;
-        const msgs = await res.json();
-        msgs.forEach(m => {
-          const div = document.createElement('div');
-          div.className = 'message';
-          div.dataset.id = m.id;
-          div.innerHTML = `<strong>${m.username}:</strong> ${m.content}`;
-          container.appendChild(div);
-          lastId = m.id;
-        });
-        container.scrollTop = container.scrollHeight;
-      } catch (err) {
-        console.error('Polling error:', err);
-      }
+      const res = await fetch(`/api/messages/?since=${lastId}`);
+      if (!res.ok) return;
+      const msgs = await res.json();
+      msgs.forEach(m => {
+        const div = document.createElement('div');
+        div.setAttribute('data-id', m.id);
+        div.innerHTML = `<strong>${m.username}:</strong> ${m.content}`;
+        container.appendChild(div);
+        lastId = m.id;
+      });
+      container.scrollTop = container.scrollHeight;
     }
-
-    fetchNew();
     setInterval(fetchNew, 2000);
 
-    // pop sound on send
-    const pop = new Audio('/static/chat/pop.mp3');
-    document.getElementById('sendForm')
-      .addEventListener('submit', () => {
-        pop.currentTime = 0;
-        pop.play();
-      });
+    // 3) Play pop sound on send
+    const pop = new Audio("{% static 'chat/pop.mp3' %}");
+    document.getElementById('sendForm').addEventListener('submit', () => {
+      pop.currentTime = 0;
+      pop.play();
+    });
   </script>
 </body>
 </html>
