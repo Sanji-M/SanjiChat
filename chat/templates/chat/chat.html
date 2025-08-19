@@ -4,24 +4,36 @@
 <head>
   <meta charset="UTF-8"/>
   <title>Chat Room</title>
+
+  <!-- Google Font -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+    rel="stylesheet"
+  />
+
   <style>
+    /* Base */
     body {
-      font-family: sans-serif;
-      max-width: 600px;
-      margin: 2rem auto;
-      padding: 0 1rem;
+      font-family: 'Inter', sans-serif;
+      background: #f2f5f8;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
     }
     h1 {
       text-align: center;
-      margin-bottom: 1rem;
+      margin: 2rem 0 1rem;
+      color: #333;
+      font-weight: 600;
     }
 
-    /* Overlay for the name prompt */
+    /* Name-prompt overlay */
     #name-prompt {
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5);
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -30,100 +42,153 @@
     #name-prompt .box {
       background: #fff;
       padding: 2rem;
-      border-radius: 8px;
-      text-align: center;
+      border-radius: 12px;
       width: 90%;
-      max-width: 320px;
+      max-width: 360px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      text-align: center;
     }
     #name-prompt input {
-      width: calc(100% - 1rem);
-      padding: 0.5rem;
+      width: 100%;
+      padding: 0.75rem 1rem;
       margin-top: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
       font-size: 1rem;
+      outline: none;
     }
     #name-prompt button {
       margin-top: 1rem;
-      padding: 0.5rem 1rem;
-      font-size: 1rem;
+      padding: 0.75rem 1.5rem;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
       cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    #name-prompt button:hover {
+      background: #0056b3;
     }
 
+    /* Chat container */
+    #chat-container {
+      flex: 1;
+      max-width: 600px;
+      margin: 0 auto 2rem;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Message area */
     #messages {
-      min-height: 50vh;
-      border: 1px solid #ddd;
-      padding: 1rem;
-      background: #fafafa;
+      flex: 1;
+      padding: 1.5rem;
       overflow-y: auto;
-      margin-bottom: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      background: #fafafa;
+    }
+    .message {
+      padding: 1rem;
+      background: #e4e6eb;
+      border-radius: 12px;
+      max-width: 75%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      color: #333;
+      line-height: 1.4;
     }
 
+    /* Custom scrollbar */
+    #messages::-webkit-scrollbar {
+      width: 8px;
+    }
+    #messages::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: 4px;
+    }
+
+    /* Send form */
     #sendForm {
       display: flex;
       gap: 0.5rem;
+      padding: 1rem;
+      border-top: 1px solid #eee;
+      background: #fff;
     }
     #sendForm input {
       flex: 1;
-      padding: 0.5rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      padding: 0.75rem 1rem;
+      border: 1px solid #ddd;
+      border-radius: 30px;
       outline: none;
+      background: #fafafa;
+      font-size: 1rem;
     }
     #sendForm button {
       background: #007bff;
-      color: white;
+      color: #fff;
       border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
+      padding: 0.75rem 1.5rem;
+      border-radius: 30px;
       cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s, transform 0.1s;
     }
     #sendForm button:hover {
       background: #0056b3;
+      transform: translateY(-1px);
     }
   </style>
 </head>
 <body>
+
   <h1>Chat Room</h1>
 
-  <!-- Name Prompt Overlay -->
+  <!-- Name Prompt -->
   <div id="name-prompt">
     <div class="box">
-      <h2>Enter your name</h2>
-      <input id="name-input" placeholder="Your name..." autocomplete="off"/>
+      <h2>What’s your name?</h2>
+      <input id="name-input" placeholder="Enter name…" autocomplete="off"/>
       <button id="set-name">Set</button>
     </div>
   </div>
 
-  <!-- Message History -->
-  <div id="messages">
-    {% for msg in messages %}
-      <div data-id="{{ msg.id }}">
-        <strong>{{ msg.username }}:</strong> {{ msg.content }}
-      </div>
-    {% endfor %}
+  <!-- Main Chat -->
+  <div id="chat-container">
+    <div id="messages">
+      {% for msg in messages %}
+        <div class="message" data-id="{{ msg.id }}">
+          <strong>{{ msg.username }}:</strong> {{ msg.content }}
+        </div>
+      {% endfor %}
+    </div>
+
+    <form id="sendForm" method="post" action="{% url 'chat' %}">
+      {% csrf_token %}
+      <input type="hidden" name="username" id="username-input"/>
+      <input name="content" placeholder="Type a message…" autocomplete="off" required/>
+      <button type="submit">Send</button>
+    </form>
   </div>
 
-  <!-- Send Form -->
-  <form id="sendForm" method="post" action="{% url 'chat' %}">
-    {% csrf_token %}
-    <input type="hidden" name="username" id="username-input"/>
-    <input name="content" placeholder="Your message" autocomplete="off" required/>
-    <button type="submit">Send</button>
-  </form>
-
   <script>
-    // 1. Handle one-time name prompt
+    // Name prompt logic (unchanged)
     const promptEl = document.getElementById('name-prompt');
     const nameInput = document.getElementById('name-input');
     const setBtn   = document.getElementById('set-name');
     const hiddenUsername = document.getElementById('username-input');
-
-    // If we already have a name stored, skip overlay
     let username = localStorage.getItem('chat_username');
     if (username) {
       promptEl.style.display = 'none';
       hiddenUsername.value = username;
     }
-
     setBtn.addEventListener('click', () => {
       username = nameInput.value.trim() || 'Anonymous';
       localStorage.setItem('chat_username', username);
@@ -131,41 +196,33 @@
       promptEl.style.display = 'none';
     });
 
-    // 2. Polling for new messages
+    // Polling + pop sound logic (unchanged)
     const container = document.getElementById('messages');
     let lastId = 0;
     container.querySelectorAll('[data-id]').forEach(el => {
-      lastId = Math.max(lastId, Number(el.dataset.id));
+      lastId = Math.max(lastId, +el.dataset.id);
     });
-
     async function fetchNew() {
       try {
         const res = await fetch(`/api/messages/?since=${lastId}`);
         if (!res.ok) return;
-        const msgs = await res.json();
-        msgs.forEach(m => {
-          const div = document.createElement('div');
-          div.dataset.id = m.id;
-          div.innerHTML = `<strong>${m.username}:</strong> ${m.content}`;
-          container.appendChild(div);
+        (await res.json()).forEach(m => {
+          const d = document.createElement('div');
+          d.className = 'message';
+          d.dataset.id = m.id;
+          d.innerHTML = `<strong>${m.username}:</strong> ${m.content}`;
+          container.appendChild(d);
           lastId = m.id;
         });
         container.scrollTop = container.scrollHeight;
-      } catch (err) {
-        console.error('Polling error:', err);
-      }
+      } catch (e) { console.error(e); }
     }
-
-    // Start polling
     fetchNew();
     setInterval(fetchNew, 2000);
 
-    // 3. Play pop sound on send
     const pop = new Audio("{% static 'chat/pop.mp3' %}");
-    document.getElementById('sendForm').addEventListener('submit', () => {
-      pop.currentTime = 0;
-      pop.play();
-    });
+    document.getElementById('sendForm')
+      .addEventListener('submit', () => { pop.currentTime = 0; pop.play(); });
   </script>
 </body>
 </html>
