@@ -183,24 +183,6 @@
       background: #0056b3;
       transform: translateY(-1px);
     }
-
-    .clear-form {
-      margin-bottom: 2rem;
-    }
-
-    .clear-form button {
-      background: #dc3545;
-      color: white;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    .clear-form button:hover {
-      background: #c82333;
-    }
   </style>
 </head>
 <body>
@@ -233,13 +215,6 @@
       <button type="submit">Send</button>
     </form>
   </div>
-
-  <!-- Clear All Chats Button -->
-  <form method="post" action="{% url 'clear_messages' %}" class="clear-form">
-    {% csrf_token %}
-    <input type="hidden" name="key" value="sanji-clear-2025"/>
-    <button type="submit">🧹 Clear All Chats</button>
-  </form>
 
   <script>
     const promptEl = document.getElementById('name-prompt');
@@ -281,6 +256,19 @@
         });
         container.scrollTop = container.scrollHeight;
       } catch (error) {
-    console.error(error);
-  }
-}
+        console.error(error);
+      }
+    }
+
+    fetchNew();
+    setInterval(fetchNew, 2000);
+
+    const pop = new Audio("{% static 'chat/pop.mp3' %}");
+    document.getElementById('sendForm')
+      .addEventListener('submit', () => {
+        pop.currentTime = 0;
+        pop.play();
+      });
+  </script>
+</body>
+</html>
