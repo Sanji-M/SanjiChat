@@ -1,101 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <title>Sanji’s Chat Room</title>
   <style>
+    /* Container & typography */
     body {
-      font-family: sans-serif;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      margin: 0;
+      font-size: 2.5rem;
+      color: #333;
+      opacity: 0;
+      animation: fadeInDown 1s forwards;
+    }
+    p.subtitle {
+      margin: 0.5rem 0 2rem;
+      color: #666;
+      font-size: 1.1rem;
+      opacity: 0;
+      animation: fadeInDown 1s 0.3s forwards;
+    }
+
+    /* Chat box */
+    #chat-box {
+      width: 100%;
       max-width: 600px;
-      margin: 2rem auto;
-      padding: 0 1rem;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      opacity: 0;
+      animation: slideUp 1s 0.6s forwards;
     }
-    h1 { font-size: 2rem; margin-bottom: 0.25rem; }
-    p.subtitle { color: #555; margin-top: 0; }
+
+    /* Messages area */
     #messages {
-      border: 1px solid #ddd;
+      flex: 1;
       padding: 1rem;
-      height: 50vh;
       overflow-y: auto;
-      margin-bottom: 1rem;
-      background: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
     }
-    #messages div { margin-bottom: 0.5rem; }
+    .message {
+      background: #e1f0ff;
+      padding: 0.75rem 1rem;
+      border-radius: 20px;
+      max-width: 80%;
+      animation: bubblePop 0.4s ease-out forwards;
+    }
+    .from-me {
+      align-self: flex-end;
+      background: #c8e6c9;
+    }
+
+    /* Input area */
     #sendForm {
       display: flex;
-      gap: 0.5rem;
-      align-items: center;
+      border-top: 1px solid #eee;
     }
     #sendForm input {
       flex: 1;
-      padding: 0.5rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      border: none;
+      padding: 1rem;
+      font-size: 1rem;
+      outline: none;
+    }
+    #sendForm input::placeholder {
+      color: #bbb;
+      opacity: 0;
+      transform: translateY(10px);
+      animation: fadeInUp 0.5s 1.2s forwards;
     }
     #sendForm button {
-      padding: 0.6rem 1.2rem;
       background: #007bff;
-      color: #fff;
       border: none;
-      border-radius: 4px;
+      color: #fff;
+      padding: 0 1.5rem;
       cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.2s, transform 0.2s;
+      opacity: 0;
+      animation: fadeInUp 0.5s 1.2s forwards;
     }
     #sendForm button:hover {
       background: #0056b3;
+      transform: scale(1.05);
+    }
+
+    /* Animations */
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes bubblePop {
+      0%   { opacity: 0; transform: scale(0.8) translateY(10px); }
+      80%  { opacity: 1; transform: scale(1.05) translateY(0); }
+      100% { transform: scale(1) translateY(0); }
     }
   </style>
 </head>
 <body>
   <h1>Sanji’s Chat Room</h1>
-  <p class="subtitle">Eeh! ni kubanja tu. 🎉</p>
+  <p class="subtitle">Eeh! ni kubanja tu 🎉</p>
 
-  <div id="messages">
-    {% for message in messages %}
-      <div data-id="{{ message.id }}">
-        <strong>{{ message.username }}</strong>: {{ message.content }}
-      </div>
-    {% endfor %}
-  </div>
+  <div id="chat-box">
+    <div id="messages">
+      {% for msg in messages %}
+        <div
+          class="message {% if msg.username == request.session.username %}from-me{% endif %}"
+          data-id="{{ msg.id }}"
+        >
+          <strong>{{ msg.username }}:</strong> {{ msg.content }}
+        </div>
+      {% endfor %}
+    </div>
 
-  <form id="sendForm" method="post" action="{% url 'chat' %}">
-    {% csrf_token %}
-    <label>
-      Jambo ✏️✏️
+    <form id="sendForm" method="post" action="{% url 'chat' %}">
+      {% csrf_token %}
       <input
         name="content"
         placeholder="Type a message…"
         required
       />
-    </label>
-    <button type="submit">Send</button>
-  </form>
+      <button type="submit">Send</button>
+    </form>
+  </div>
 
   <script>
-    // Real-time polling
+    // Grab elements
     const container = document.getElementById('messages');
     let lastId = 0;
     container.querySelectorAll('[data-id]').forEach(el => {
-      lastId = Math.max(lastId, Number(el.getAttribute('data-id')));
+      lastId = Math.max(lastId, Number(el.dataset.id));
     });
 
+    // Poll new messages
     async function fetchNew() {
-      const res = await fetch(`/api/messages/?since=${lastId}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      data.forEach(m => {
-        const div = document.createElement('div');
-        div.setAttribute('data-id', m.id);
-        div.innerHTML = `<strong>${m.username}</strong>: ${m.content}`;
-        container.append(div);
-        lastId = m.id;
-      });
-      container.scrollTop = container.scrollHeight;
+      try {
+        const res = await fetch(`/api/messages/?since=${lastId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        data.forEach(m => {
+          const div = document.createElement('div');
+          div.className = 'message';
+          div.dataset.id = m.id;
+          div.innerHTML = `<strong>${m.username}:</strong> ${m.content}`;
+          container.append(div);
+          lastId = m.id;
+        });
+        container.scrollTop = container.scrollHeight;
+      } catch (e) {
+        console.error(e);
+      }
     }
-
     fetchNew();
     setInterval(fetchNew, 2000);
 
-    // Pop sound on send
+    // Pop sound
     const pop = new Audio('/static/chat/pop.mp3');
     document.getElementById('sendForm').addEventListener('submit', () => {
       pop.currentTime = 0;
