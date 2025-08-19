@@ -4,8 +4,8 @@ services:
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: >
-      bash -c "python manage.py migrate &&
+      python manage.py migrate &&
       python manage.py collectstatic --noinput &&
-      gunicorn chatproject.wsgi:application"
+      gunicorn chatproject.wsgi:application
     plan: free
     autoDeploy: true
