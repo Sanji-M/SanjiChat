@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from .models import Message
 
+
+
 def intro_view(request):
     return render(request, 'chat/intro.html')
 
