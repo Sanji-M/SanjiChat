@@ -13,12 +13,10 @@ def chat_view(request):
             Message.objects.create(username=username, content=content)
         return redirect('chat')
 
-    # Load the most recent 50 messages
     messages = Message.objects.order_by('timestamp')[:50]
     return render(request, 'chat/chat.html', {'messages': messages})
 
 def messages_api(request):
-    # Client will pass ?since=<last-id>
     try:
         last_id = int(request.GET.get('since', 0))
     except (TypeError, ValueError):
